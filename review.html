@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <link rel="icon" href="data:,">
+  <title>评论罗伯特实验室 · 验收入口</title>
+  <style>
+    :root { color-scheme: light; --ink:#1f2329; --soft:#68707c; --line:#dfe3e8; --accent:#e85d32; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100dvh; background:#eef0f3; color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif; }
+    main { width:min(1120px,100%); margin:0 auto; padding:42px 20px 64px; }
+    header { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:end; gap:24px; margin-bottom:28px; }
+    h1 { margin:0 0 8px; font-size:28px; letter-spacing:-.02em; }
+    header p { max-width:680px; margin:0; color:var(--soft); font-size:14px; line-height:1.7; }
+    .official { color:var(--accent); font-size:14px; font-weight:650; text-decoration:none; }
+    .official:hover { text-decoration:underline; }
+    .grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); border-top:1px solid var(--line); border-left:1px solid var(--line); background:#fff; }
+    article { min-width:0; padding:18px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); }
+    .type { margin-bottom:14px; color:var(--soft); font-size:12px; font-weight:650; letter-spacing:.05em; }
+    h2 { margin:0 0 12px; font-size:16px; }
+    dl { display:grid; grid-template-columns:auto 1fr; gap:7px 12px; margin:0 0 18px; font-size:13px; line-height:1.45; }
+    dt { color:var(--soft); }
+    dd { margin:0; font-weight:600; }
+    a.open { display:inline-flex; align-items:center; min-height:40px; padding:9px 14px; border-radius:8px; background:#23262b; color:#fff; font-size:13px; font-weight:650; text-decoration:none; transition:transform .15s ease,background .15s ease; }
+    a.open:hover { background:#3b3f46; }
+    a.open:active { transform:scale(.98); }
+    a:focus-visible { outline:3px solid #f2a77f; outline-offset:3px; }
+    @media (max-width:900px) { .grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media (max-width:560px) { main { padding:28px 14px 48px; } header { grid-template-columns:1fr; } .grid { grid-template-columns:1fr; } h1 { font-size:23px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>实验版本验收入口</h1>
+        <p>以下组合仅供研究者逐项核对。点击后将按固定顺序查看美食场景与旅游场景，正式被试入口不会显示本页或任何分组信息。</p>
+      </div>
+      <a class="official" href="index.html">打开正式被试入口 →</a>
+    </header>
+    <section class="grid" id="reviewGrid" aria-label="全部实验组合"></section>
+  </main>
+  <script>
+    (function () {
+      "use strict";
+      var grid = document.getElementById("reviewGrid");
+      var values = [false, true];
+      var number = 0;
+
+      values.forEach(function (foodRatio) {
+        values.forEach(function (foodCount) {
+          values.forEach(function (travelRatio) {
+            values.forEach(function (travelCount) {
+              number += 1;
+              var code = "F" + Number(foodRatio) + Number(foodCount) + "T" + Number(travelRatio) + Number(travelCount);
+              var article = document.createElement("article");
+              var label = document.createElement("div");
+              var title = document.createElement("h2");
+              var list = document.createElement("dl");
+              var link = document.createElement("a");
+
+              label.className = "type";
+              label.textContent = "类型 " + String(number).padStart(2, "0");
+              title.textContent = code;
+              [
+                ["美食占比", foodRatio], ["美食数量", foodCount],
+                ["旅游占比", travelRatio], ["旅游数量", travelCount]
+              ].forEach(function (item) {
+                var term = document.createElement("dt");
+                var detail = document.createElement("dd");
+                term.textContent = item[0];
+                detail.textContent = item[1] ? "显示" : "不显示";
+                list.append(term, detail);
+              });
+              link.className = "open";
+              link.href = "index.html?review=" + code;
+              link.target = "_blank";
+              link.rel = "noopener";
+              link.textContent = "打开验证 →";
+              article.append(label, title, list, link);
+              grid.appendChild(article);
+            });
+          });
+        });
+      });
+    }());
+  </script>
+</body>
+</html>

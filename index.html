@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <link rel="icon" href="data:,">
+  <title>评论罗伯特实验室</title>
+  <style>
+    :root {
+      --page-bg: #eef0f3;
+      --panel-border: #dfe3e8;
+      --ink: #1f2329;
+      --ink-soft: #6b7280;
+      --accent: #ff7a3d;
+      --danger: #e6483c;
+      --danger-soft-fixed: #fdeceb;
+      --shadow: 0 1px 2px rgba(20, 20, 25, .04), 0 8px 24px rgba(20, 20, 25, .06);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      background: var(--page-bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button { font: inherit; }
+
+    .page {
+      width: min(100%, 640px);
+      margin: 0 auto;
+      padding: 28px 18px 64px;
+    }
+
+    .scene-progress {
+      margin: 0 0 10px 2px;
+      color: var(--ink-soft);
+      font-size: 12px;
+      letter-spacing: .04em;
+    }
+
+    .wb-shell {
+      background: #f7f8fa;
+      border: 1px solid #e3e6ea;
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: var(--shadow);
+    }
+
+    .wb-card {
+      overflow: hidden;
+      border-radius: 12px;
+      padding: 16px 18px 8px;
+      background: #fff;
+      color: #181818;
+    }
+
+    .wb-head { display: flex; gap: 10px; }
+
+    .wb-avatar {
+      display: flex;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--wb-a1, #ffb35e), var(--wb-a2, #ff7a3d));
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .wb-who { flex: 1; min-width: 0; }
+    .wb-name-row { display: flex; align-items: center; gap: 5px; }
+    .wb-name { color: #181818; font-size: 15px; font-weight: 600; }
+    .wb-badge { width: 14px; height: 14px; flex: 0 0 auto; }
+
+    .wb-tagline {
+      margin-left: 2px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: #fff2e4;
+      color: #e07a1f;
+      font-size: 11px;
+    }
+
+    .wb-meta { margin-top: 2px; color: #999; font-size: 12px; }
+
+    .wb-text {
+      margin: 10px 0 12px;
+      color: #181818;
+      font-size: 14.5px;
+      line-height: 1.65;
+    }
+
+    .wb-media {
+      display: block;
+      width: 100%;
+      aspect-ratio: 3 / 2;
+      margin-bottom: 12px;
+      border-radius: 10px;
+      object-fit: cover;
+      background: #eceff2;
+    }
+
+    .wb-ai {
+      margin-bottom: 12px;
+      padding: 12px 14px;
+      border: 1px solid #ffe3c7;
+      border-radius: 10px;
+      background: #fff8f2;
+    }
+
+    .wb-ai-head { display: flex; align-items: center; gap: 7px; margin-bottom: 9px; }
+
+    .wb-ai-icon {
+      display: flex;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      background: var(--accent);
+    }
+
+    .wb-ai-icon svg { width: 12px; height: 12px; fill: #fff; }
+    .wb-ai-name { color: #181818; font-size: 13px; font-weight: 700; }
+    .wb-ai-sub { margin-left: 2px; color: #b08256; font-size: 11px; }
+    .wb-ai-pct-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+    .wb-ai-pct-num { color: var(--danger); font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .wb-ai-pct-label { color: #5b5b5b; font-size: 12px; }
+
+    .wb-ai-bar {
+      height: 6px;
+      margin-bottom: 8px;
+      overflow: hidden;
+      border-radius: 4px;
+      background: #ffe3c7;
+    }
+
+    .wb-ai-bar-fill { width: 32%; height: 100%; border-radius: 4px; background: var(--danger); }
+    .wb-ai-count { margin-bottom: 9px; color: #5b5b5b; font-size: 12.5px; line-height: 1.6; }
+    .wb-ai-count b { color: var(--danger); font-weight: 700; }
+    .wb-ai-examples-label { margin-bottom: 5px; color: #a8895f; font-size: 11.5px; font-weight: 600; }
+
+    .wb-ai-quote {
+      padding: 5px 0;
+      border-top: 1px dashed #ffe3c7;
+      color: #3d3d3d;
+      font-size: 12.5px;
+      line-height: 1.6;
+    }
+
+    .wb-ai-quote:first-child { border-top: 0; }
+
+    .wb-engage {
+      display: flex;
+      gap: 22px;
+      margin-bottom: 10px;
+      padding: 9px 0;
+      border-top: 1px solid #f0f0f0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .wb-engage > span { display: flex; align-items: center; gap: 5px; color: #8a8a8a; font-size: 12.5px; }
+    .wb-engage svg { width: 15px; height: 15px; fill: none; stroke: #8a8a8a; stroke-width: 1.6; }
+    .wb-comment-count { margin-bottom: 9px; color: #181818; font-size: 13px; font-weight: 600; }
+    .wb-comments { display: flex; flex-direction: column; }
+
+    .wb-comment {
+      display: flex;
+      gap: 9px;
+      padding: 9px 0;
+      border-top: 1px solid #f4f4f4;
+    }
+
+    .wb-comment:first-child { border-top: 0; }
+    .wb-comment.is-neg { margin: 0 -18px; padding: 9px 18px; background: linear-gradient(90deg, #fff5f4, transparent 40%); }
+    .wb-comment.is-neg .wb-c-avatar { background: #e0a49c; }
+
+    .wb-c-avatar {
+      width: 30px;
+      height: 30px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: var(--c-color, #c9c9c9);
+    }
+
+    .wb-c-body { flex: 1; min-width: 0; }
+    .wb-c-name { color: #e07a1f; font-size: 12.5px; font-weight: 500; }
+    .wb-c-text { margin: 2px 0 4px; color: #242424; font-size: 13.5px; line-height: 1.55; }
+    .wb-c-meta { display: flex; align-items: center; gap: 10px; color: #a3a3a3; font-size: 11.5px; }
+
+    .wb-c-neg-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: var(--danger-soft-fixed);
+      color: var(--danger);
+      font-size: 10.5px;
+      font-weight: 600;
+    }
+
+    .wb-viewall { padding: 11px 0 13px; color: #999; font-size: 12.5px; text-align: center; }
+
+    .flow-actions { display: flex; justify-content: flex-end; margin-top: 18px; }
+
+    .continue-btn {
+      min-width: 112px;
+      min-height: 44px;
+      padding: 10px 22px;
+      border: 0;
+      border-radius: 10px;
+      background: #23262b;
+      color: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: transform .15s ease, background-color .15s ease;
+    }
+
+    .continue-btn:hover { background: #3b3f46; }
+    .continue-btn:active { transform: scale(.98); }
+    .continue-btn:focus-visible { outline: 3px solid #f2a77f; outline-offset: 3px; }
+
+    .end-card,
+    .error-card {
+      padding: 48px 24px;
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      background: #fff;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    .end-card h1,
+    .error-card h1 { margin: 0 0 10px; color: #181818; font-size: 22px; }
+    .end-card p,
+    .error-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.7; }
+    .is-hidden { display: none !important; }
+
+    .loading {
+      height: 520px;
+      border-radius: 16px;
+      background: linear-gradient(100deg, #f7f8fa 20%, #fff 38%, #f7f8fa 56%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite linear;
+    }
+
+    @keyframes shimmer { to { background-position-x: -200%; } }
+
+    @media (max-width: 480px) {
+      .page { padding: 16px 10px 40px; }
+      .wb-shell { padding: 8px; }
+      .wb-card { padding-inline: 14px; }
+      .wb-comment.is-neg { margin-inline: -14px; padding-inline: 14px; }
+      .wb-ai-head { align-items: flex-start; flex-wrap: wrap; }
+      .wb-ai-sub { width: calc(100% - 29px); margin-left: 27px; margin-top: -5px; }
+      .wb-engage { justify-content: space-between; gap: 8px; }
+      .continue-btn { width: 100%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="loading" id="loading" aria-label="页面加载中"></div>
+
+    <section id="experiment" class="is-hidden" aria-live="polite">
+      <p class="scene-progress" id="sceneProgress"></p>
+      <div class="wb-shell">
+        <article class="wb-card" id="wbCard">
+          <div class="wb-head">
+            <div class="wb-avatar" id="wbAvatar"></div>
+            <div class="wb-who">
+              <div class="wb-name-row">
+                <span class="wb-name" id="wbName"></span>
+                <svg class="wb-badge" viewBox="0 0 20 20" aria-label="认证用户"><circle cx="10" cy="10" r="10" fill="#2f9bf0"/><path d="M6 10.5l2.6 2.6L14.5 7" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span class="wb-tagline" id="wbTag"></span>
+              </div>
+              <div class="wb-meta" id="wbMeta"></div>
+            </div>
+          </div>
+
+          <div class="wb-text" id="wbText"></div>
+          <img class="wb-media" id="wbMedia" alt="">
+
+          <section class="wb-ai" aria-label="评论罗伯特分析">
+            <div class="wb-ai-head">
+              <div class="wb-ai-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2a2 2 0 012 2v1h1a3 3 0 013 3v9a3 3 0 01-3 3H9a3 3 0 01-3-3V8a3 3 0 013-3h1V4a2 2 0 012-2zm-3 8a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm6 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm-7 6.2c.9.9 2.15 1.3 4 1.3s3.1-.4 4-1.3"/></svg></div>
+              <span class="wb-ai-name">评论罗伯特</span>
+              <span class="wb-ai-sub">AI 根据用户真实评论实时总结或提取</span>
+            </div>
+
+            <div id="ratioBlock">
+              <div class="wb-ai-pct-row">
+                <span class="wb-ai-pct-num">32%</span>
+                <span class="wb-ai-pct-label">评论疑似涉及在线骚扰</span>
+              </div>
+              <div class="wb-ai-bar"><div class="wb-ai-bar-fill"></div></div>
+            </div>
+
+            <div class="wb-ai-count" id="countIntro"></div>
+            <div id="aiExamples"></div>
+          </section>
+
+          <div class="wb-engage">
+            <span><svg viewBox="0 0 24 24"><path d="M17 1l4 4-4 4M7 23l-4-4 4-4M3 5h11a4 4 0 014 4v2M21 19H10a4 4 0 01-4-4v-2"/></svg>转发 <span id="engRepost"></span></span>
+            <span><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>评论 <span>126</span></span>
+            <span><svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"/><path d="M7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg>赞 <span id="engLike"></span></span>
+          </div>
+
+          <div class="wb-comment-count">评论 126</div>
+          <div class="wb-comments" id="wbComments"></div>
+          <div class="wb-viewall">查看全部 126 条评论 ›</div>
+        </article>
+      </div>
+
+      <div class="flow-actions">
+        <button class="continue-btn" id="continueBtn" type="button">继续 →</button>
+      </div>
+    </section>
+
+    <section class="end-card is-hidden" id="endCard" aria-live="polite">
+      <h1>感谢您的配合</h1>
+      <p>您已完成全部场景，请返回问卷继续作答。</p>
+    </section>
+
+    <section class="error-card is-hidden" id="errorCard" role="alert">
+      <h1>页面暂时无法显示</h1>
+      <p>请刷新页面后重试。</p>
+    </section>
+
+    <noscript><section class="error-card"><h1>需要启用 JavaScript</h1><p>请在浏览器中启用 JavaScript 后刷新页面。</p></section></noscript>
+  </main>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var STORAGE_KEY = "commentRobertExperimentV2";
+      var TOTAL_COMMENTS = 126;
+      var NEGATIVE_COUNT = 40;
+
+      var TOPICS = {
+        food: {
+          name: "阿橘的小厨房",
+          avatarInit: "阿",
+          tag: "美食博主",
+          meta: "09月05日 21:47 来自 iPhone 15 Pro客户端",
+          text: "在家捣鼓了整整一个月，终于复刻出了楼下那家排队两小时的芝士拉丝披萨！外酥内软，拉丝也太治愈了，谁想要配方评论区扣1～",
+          image: "assets/images/披萨.jpeg",
+          imageAlt: "一张芝士披萨照片",
+          colors: ["#ffb35e", "#ff6a3d"],
+          engage: { repost: 39, like: 42 },
+          positives: [
+            "求配方！！在线等挺急的",
+            "这个拉丝也太绝了吧，馋哭了",
+            "同款烤箱求型号，谢谢博主",
+            "已经收藏了，周末就试试",
+            "看饿了，现在是晚上十点半",
+            "饼底看着好脆，是自己揉的面吗",
+            "求完整教程视频，跪求了",
+            "这颜值不去开店可惜了",
+            "已经点了外卖披萨解馋哈哈"
+          ],
+          negatives: [
+            "天天晒吃的，真的很闲啊",
+            "拍成这样不还是买的半成品加热一下",
+            "有本事自己开店，别整天发朋友圈",
+            "这种摆拍视频看多了真的会腻"
+          ]
+        },
+        travel: {
+          name: "远途鹿鹿",
+          avatarInit: "远",
+          tag: "旅行博主",
+          meta: "09月05日 19:12 来自 微博国际版",
+          text: "攒了大半年年假和预算，终于去了马尔代夫圆梦！海水蓝到发光，躺在水屋里看日落，什么烦恼都没了～问我攻略的姐妹评论区扣1",
+          image: "assets/images/马尔代夫-高清.jpg",
+          imageAlt: "一张马尔代夫海岛照片",
+          colors: ["#5fc2ea", "#0e6ba8"],
+          engage: { repost: 27, like: 66 },
+          positives: [
+            "这蓝也太治愈了吧，人生赢家",
+            "求酒店链接，攒钱去",
+            "签证好办吗，机票哪里买的划算",
+            "羡慕住上水屋了，一直想去",
+            "这日落绝了，帮我保存了",
+            "什么时候去的，人多不多",
+            "求详细行程和花费明细",
+            "拍照技术也太好了吧",
+            "已经心动，准备下个月安排上"
+          ],
+          negatives: [
+            "秀什么秀，不就是花钱吗",
+            "有钱人的世界，打工人不懂",
+            "天天出去玩，工作谁做的",
+            "又是凡尔赛文学，看烦了"
+          ]
+        }
+      };
+
+      var COMMENT_NAMES = ["青禾不迟", "阿樱不迷路", "橙子不吃苹果", "半岛铁盒", "小满未满", "拿铁不加糖", "云边小卖部", "阿May", "北岸暮色", "一饱十年", "陈皮拿铁", "旧巷猫", "阿虎爱睡觉"];
+      var COMMENT_COLORS = ["#ffb35e", "#8bd3c7", "#f4a6a0", "#a0c4ff", "#c9b1ff", "#ffd97d", "#9ad0c2", "#f7b7a3"];
+      var VISIBLE_PATTERN = ["p", "p", "n", "p", "p", "n", "p", "p", "n", "p", "p", "n", "p"];
+
+      function el(id) { return document.getElementById(id); }
+
+      function makeGroup() {
+        return { ratioShown: Math.random() < 0.5, countShown: Math.random() < 0.5 };
+      }
+
+      function makeSession() {
+        return {
+          version: 2,
+          foodGroup: makeGroup(),
+          travelGroup: makeGroup(),
+          sceneOrder: Math.random() < 0.5 ? ["food", "travel"] : ["travel", "food"],
+          currentSceneIndex: 0
+        };
+      }
+
+      function makeReviewSession(code) {
+        var match = /^F([01])([01])T([01])([01])$/.exec(code || "");
+        if (!match) return null;
+        return {
+          version: 2,
+          foodGroup: { ratioShown: match[1] === "1", countShown: match[2] === "1" },
+          travelGroup: { ratioShown: match[3] === "1", countShown: match[4] === "1" },
+          sceneOrder: ["food", "travel"],
+          currentSceneIndex: 0,
+          reviewMode: true
+        };
+      }
+
+      function isValidGroup(group) {
+        return group && typeof group.ratioShown === "boolean" && typeof group.countShown === "boolean";
+      }
+
+      function isValidSession(value) {
+        return value && value.version === 2 && isValidGroup(value.foodGroup) && isValidGroup(value.travelGroup) &&
+          Array.isArray(value.sceneOrder) && value.sceneOrder.length === 2 &&
+          value.sceneOrder.indexOf("food") !== -1 && value.sceneOrder.indexOf("travel") !== -1 &&
+          Number.isInteger(value.currentSceneIndex) && value.currentSceneIndex >= 0 && value.currentSceneIndex <= 2;
+      }
+
+      function loadSession() {
+        var saved = sessionStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          try {
+            var parsed = JSON.parse(saved);
+            if (isValidSession(parsed)) return parsed;
+          } catch (error) {
+            sessionStorage.removeItem(STORAGE_KEY);
+          }
+        }
+        var created = makeSession();
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(created));
+        return created;
+      }
+
+      function saveSession(session) {
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+      }
+
+      function buildComments(topic) {
+        var positiveIndex = 0;
+        var negativeIndex = 0;
+        return VISIBLE_PATTERN.map(function (kind) {
+          if (kind === "n") return { text: topic.negatives[negativeIndex++], negative: true };
+          return { text: topic.positives[positiveIndex++], negative: false };
+        });
+      }
+
+      function renderExamples(topic) {
+        var wrap = el("aiExamples");
+        wrap.replaceChildren();
+        topic.negatives.slice(0, 3).forEach(function (quote) {
+          var row = document.createElement("div");
+          row.className = "wb-ai-quote";
+          row.textContent = "“" + quote + "”";
+          wrap.appendChild(row);
+        });
+      }
+
+      function renderComments(topic, countShown) {
+        var wrap = el("wbComments");
+        wrap.replaceChildren();
+        buildComments(topic).forEach(function (comment, index) {
+          var flagged = comment.negative && countShown;
+          var row = document.createElement("div");
+          var avatar = document.createElement("div");
+          var body = document.createElement("div");
+          var name = document.createElement("div");
+          var text = document.createElement("div");
+          var meta = document.createElement("div");
+          var time = document.createElement("span");
+          var likes = document.createElement("span");
+
+          row.className = "wb-comment" + (flagged ? " is-neg" : "");
+          avatar.className = "wb-c-avatar";
+          avatar.style.setProperty("--c-color", COMMENT_COLORS[index % COMMENT_COLORS.length]);
+          body.className = "wb-c-body";
+          name.className = "wb-c-name";
+          name.textContent = COMMENT_NAMES[index];
+          text.className = "wb-c-text";
+          text.textContent = comment.text;
+          meta.className = "wb-c-meta";
+          time.textContent = (3 + index * 7) + "分钟前";
+          likes.textContent = "赞 " + (2 + (index * 3) % 18);
+
+          meta.append(time, likes);
+          if (flagged) {
+            var chip = document.createElement("span");
+            chip.className = "wb-c-neg-chip";
+            chip.textContent = "AI 标记";
+            meta.appendChild(chip);
+          }
+          body.append(name, text, meta);
+          row.append(avatar, body);
+          wrap.appendChild(row);
+        });
+      }
+
+      function renderScene(session) {
+        var sceneName = session.sceneOrder[session.currentSceneIndex];
+        var topic = TOPICS[sceneName];
+        var group = session[sceneName + "Group"];
+
+        el("sceneProgress").textContent = "场景 " + (session.currentSceneIndex + 1) + " / 2";
+        el("wbAvatar").textContent = topic.avatarInit;
+        el("wbAvatar").style.setProperty("--wb-a1", topic.colors[0]);
+        el("wbAvatar").style.setProperty("--wb-a2", topic.colors[1]);
+        el("wbName").textContent = topic.name;
+        el("wbTag").textContent = topic.tag;
+        el("wbMeta").textContent = topic.meta;
+        el("wbText").textContent = topic.text;
+        el("wbMedia").src = topic.image;
+        el("wbMedia").alt = topic.imageAlt;
+        el("engRepost").textContent = topic.engage.repost;
+        el("engLike").textContent = topic.engage.like;
+
+        el("ratioBlock").classList.toggle("is-hidden", !group.ratioShown);
+        el("countIntro").innerHTML = group.countShown
+          ? "<b>" + NEGATIVE_COUNT + "</b> 条评论涉嫌在线骚扰（共 <b>" + TOTAL_COMMENTS + "</b> 条评论），AI 提取的原始评论示例如下："
+          : "AI 提取的原始评论示例如下：";
+
+        renderExamples(topic);
+        renderComments(topic, group.countShown);
+        el("loading").classList.add("is-hidden");
+        el("endCard").classList.add("is-hidden");
+        el("experiment").classList.remove("is-hidden");
+      }
+
+      function renderEnd() {
+        el("loading").classList.add("is-hidden");
+        el("experiment").classList.add("is-hidden");
+        el("endCard").classList.remove("is-hidden");
+      }
+
+      try {
+        var reviewCode = new URLSearchParams(window.location.search).get("review");
+        var session = makeReviewSession(reviewCode) || loadSession();
+        if (session.currentSceneIndex >= 2) renderEnd();
+        else renderScene(session);
+
+        el("continueBtn").addEventListener("click", function () {
+          session.currentSceneIndex += 1;
+          if (!session.reviewMode) saveSession(session);
+          if (session.currentSceneIndex >= 2) renderEnd();
+          else {
+            renderScene(session);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }
+        });
+      } catch (error) {
+        el("loading").classList.add("is-hidden");
+        el("experiment").classList.add("is-hidden");
+        el("errorCard").classList.remove("is-hidden");
+      }
+    }());
+  </script>
+</body>
+</html>
