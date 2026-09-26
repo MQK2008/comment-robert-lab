@@ -135,7 +135,7 @@
       background: #ffe3c7;
     }
 
-    .wb-ai-bar-fill { width: 0%; height: 100%; border-radius: 4px; background: var(--danger); transition: width .12s linear; }
+    .wb-ai-bar-fill { width: 0%; height: 100%; border-radius: 4px; background: var(--danger); transition: width .5s ease; }
 
     .wb-engage {
       display: flex;
@@ -318,7 +318,14 @@
             "拍成这样不还是买的半成品加热一下",
             "有本事自己开店，别整天发朋友圈",
             "这种摆拍视频看多了真的会腻"
-          ]
+          ],
+          incoming: {
+            negatives: ["至于嘛，天天发这些有意思吗", "看着就是买的现成的，别装了"],
+            positives: ["已经心动了，明天就去买食材", "这个滤镜也太好看了吧", "求同款盘子链接", "看得我半夜想点外卖了"]
+          },
+          extra: {
+            positives: ["博主坚持更新简直是意志力天花板", "已经安利给我朋友了", "期待下一期教程"]
+          }
         },
         travel: {
           name: "远途鹿鹿",
@@ -346,11 +353,19 @@
             "有钱人的世界，打工人不懂",
             "天天出去玩，工作谁做的",
             "又是凡尔赛文学，看烦了"
-          ]
+          ],
+          incoming: {
+            negatives: ["有钱人的快乐我们不懂，别炫了", "这种炫耀式旅行看着真心累"],
+            positives: ["已经心动，准备存钱去", "这滤镜也太好看了吧", "求同款泳衣链接", "看完好想立刻请假"]
+          },
+          extra: {
+            positives: ["博主拍照审美真的绝了", "已经安利给闺蜜了", "期待下一期旅行攻略"]
+          }
         }
       };
 
       var COMMENT_NAMES = ["青禾不迟", "阿樱不迷路", "橙子不吃苹果", "半岛铁盒", "小满未满", "拿铁不加糖", "云边小卖部", "阿May", "北岸暮色", "一饱十年", "陈皮拿铁", "旧巷猫", "阿虎爱睡觉"];
+      var EXTRA_NAMES = ["深夜路人甲", "橘子汽水味", "不打烊便利店", "糖醋排骨", "慢半拍青年", "雾里看花", "三分甜", "晚风不燥", "柚子茶少女"];
       var COMMENT_COLORS = ["#ffb35e", "#8bd3c7", "#f4a6a0", "#a0c4ff", "#c9b1ff", "#ffd97d", "#9ad0c2", "#f7b7a3"];
       var VISIBLE_PATTERN = ["p", "p", "n", "p", "p", "n", "p", "p", "n", "p", "p", "n", "p"];
       var RATIO_MODES = ["none", "static", "dynamic"];
@@ -418,49 +433,73 @@
         });
       }
 
+      function buildRow(name, text, colorIndex, flagged, timeText, likeText) {
+        var row = document.createElement("div");
+        var avatar = document.createElement("div");
+        var body = document.createElement("div");
+        var nameEl = document.createElement("div");
+        var textEl = document.createElement("div");
+        var meta = document.createElement("div");
+        var time = document.createElement("span");
+        var likes = document.createElement("span");
+
+        row.className = "wb-comment" + (flagged ? " is-neg" : "");
+        avatar.className = "wb-c-avatar";
+        avatar.style.setProperty("--c-color", COMMENT_COLORS[colorIndex % COMMENT_COLORS.length]);
+        body.className = "wb-c-body";
+        nameEl.className = "wb-c-name";
+        nameEl.textContent = name;
+        textEl.className = "wb-c-text";
+        textEl.textContent = text;
+        meta.className = "wb-c-meta";
+        time.textContent = timeText;
+        likes.textContent = "赞 " + likeText;
+
+        meta.append(time, likes);
+        if (flagged) {
+          var chip = document.createElement("span");
+          chip.className = "wb-c-neg-chip";
+          chip.textContent = "AI 标记";
+          meta.appendChild(chip);
+        }
+        body.append(nameEl, textEl, meta);
+        row.append(avatar, body);
+        return row;
+      }
+
       function renderComments(topic, aiLabelShown) {
         var wrap = el("wbComments");
         wrap.replaceChildren();
         buildComments(topic).forEach(function (comment, index) {
           var flagged = comment.negative && aiLabelShown;
-          var row = document.createElement("div");
-          var avatar = document.createElement("div");
-          var body = document.createElement("div");
-          var name = document.createElement("div");
-          var text = document.createElement("div");
-          var meta = document.createElement("div");
-          var time = document.createElement("span");
-          var likes = document.createElement("span");
-
-          row.className = "wb-comment" + (flagged ? " is-neg" : "");
-          avatar.className = "wb-c-avatar";
-          avatar.style.setProperty("--c-color", COMMENT_COLORS[index % COMMENT_COLORS.length]);
-          body.className = "wb-c-body";
-          name.className = "wb-c-name";
-          name.textContent = COMMENT_NAMES[index];
-          text.className = "wb-c-text";
-          text.textContent = comment.text;
-          meta.className = "wb-c-meta";
-          time.textContent = (3 + index * 7) + "分钟前";
-          likes.textContent = "赞 " + (2 + (index * 3) % 18);
-
-          meta.append(time, likes);
-          if (flagged) {
-            var chip = document.createElement("span");
-            chip.className = "wb-c-neg-chip";
-            chip.textContent = "AI 标记";
-            meta.appendChild(chip);
-          }
-          body.append(name, text, meta);
-          row.append(avatar, body);
+          var row = buildRow(COMMENT_NAMES[index], comment.text, index, flagged, (3 + index * 7) + "分钟前", String(2 + (index * 3) % 18));
           wrap.appendChild(row);
         });
       }
 
-      var ratioTimer = null;
+      var newCommentSeq = 0;
 
-      function renderRatio(ratioMode) {
-        if (ratioTimer) { clearInterval(ratioTimer); ratioTimer = null; }
+      function prependNewComments(items, aiLabelShown) {
+        var wrap = el("wbComments");
+        var frag = document.createDocumentFragment();
+        items.forEach(function (item) {
+          var flagged = item.negative && aiLabelShown;
+          var row = buildRow(item.name, item.text, COMMENT_NAMES.length + newCommentSeq, flagged, "刚刚", String(Math.floor(Math.random() * 4)));
+          newCommentSeq += 1;
+          frag.appendChild(row);
+        });
+        wrap.prepend(frag);
+      }
+
+      var ratioTimers = [];
+
+      function clearRatioTimers() {
+        ratioTimers.forEach(function (t) { clearTimeout(t); });
+        ratioTimers = [];
+      }
+
+      function renderRatio(ratioMode, topic, aiLabelShown) {
+        clearRatioTimers();
         var block = el("ratioBlock");
         var numEl = el("pctNum");
         var barEl = el("pctBar");
@@ -477,22 +516,24 @@
           return;
         }
 
-        var ticks = 16;
-        var i = 0;
-        ratioTimer = setInterval(function () {
-          i += 1;
-          if (i >= ticks) {
-            clearInterval(ratioTimer);
-            ratioTimer = null;
-            numEl.textContent = RATIO_BASE + "%";
-            barEl.style.width = RATIO_BASE + "%";
-            return;
-          }
-          var jitter = Math.round((Math.random() - 0.5) * 16);
-          var val = Math.min(96, Math.max(4, RATIO_BASE + jitter));
-          numEl.textContent = val + "%";
-          barEl.style.width = val + "%";
-        }, 150);
+        numEl.textContent = "30%";
+        barEl.style.width = "30%";
+
+        ratioTimers.push(setTimeout(function () {
+          numEl.textContent = "40%";
+          barEl.style.width = "40%";
+          var items = [];
+          topic.incoming.negatives.forEach(function (text) { items.push({ name: EXTRA_NAMES[items.length], text: text, negative: true }); });
+          topic.incoming.positives.forEach(function (text) { items.push({ name: EXTRA_NAMES[items.length], text: text, negative: false }); });
+          prependNewComments(items, aiLabelShown);
+        }, 3000));
+
+        ratioTimers.push(setTimeout(function () {
+          numEl.textContent = RATIO_BASE + "%";
+          barEl.style.width = RATIO_BASE + "%";
+          var items = topic.extra.positives.map(function (text, i) { return { name: EXTRA_NAMES[6 + i], text: text, negative: false }; });
+          prependNewComments(items, aiLabelShown);
+        }, 6000));
       }
 
       function renderScene(session) {
@@ -510,8 +551,8 @@
         el("engRepost").textContent = topic.engage.repost;
         el("engLike").textContent = topic.engage.like;
 
-        renderRatio(session.group.ratioMode);
         renderComments(topic, session.group.aiLabelShown);
+        renderRatio(session.group.ratioMode, topic, session.group.aiLabelShown);
 
         el("loading").classList.add("is-hidden");
         el("experiment").classList.remove("is-hidden");
