@@ -36,7 +36,7 @@
     <header>
       <div>
         <h1>实验版本验收入口</h1>
-        <p>以下组合仅供研究者逐项核对。点击后将按固定顺序查看美食场景与旅游场景，正式被试入口不会显示本页或任何分组信息。</p>
+        <p>以下组合仅供研究者逐项核对（情境 2 × 比例展示 3 × AI标记 2 = 12 组）。点击后按固定组合直接打开正式被试卡片，正式被试入口不会显示本页或任何分组信息。</p>
       </div>
       <a class="official" href="index.html">打开正式被试入口 →</a>
     </header>
@@ -46,42 +46,43 @@
     (function () {
       "use strict";
       var grid = document.getElementById("reviewGrid");
-      var values = [false, true];
+      var topics = [{ code: "F", label: "美食" }, { code: "T", label: "旅游" }];
+      var ratios = [{ code: "N", label: "无" }, { code: "S", label: "静态" }, { code: "D", label: "动态波动" }];
+      var labels = [{ code: "0", label: "不显示" }, { code: "1", label: "显示" }];
       var number = 0;
 
-      values.forEach(function (foodRatio) {
-        values.forEach(function (foodCount) {
-          values.forEach(function (travelRatio) {
-            values.forEach(function (travelCount) {
-              number += 1;
-              var code = "F" + Number(foodRatio) + Number(foodCount) + "T" + Number(travelRatio) + Number(travelCount);
-              var article = document.createElement("article");
-              var label = document.createElement("div");
-              var title = document.createElement("h2");
-              var list = document.createElement("dl");
-              var link = document.createElement("a");
+      topics.forEach(function (topic) {
+        ratios.forEach(function (ratio) {
+          labels.forEach(function (label) {
+            number += 1;
+            var code = topic.code + ratio.code + label.code;
+            var article = document.createElement("article");
+            var tag = document.createElement("div");
+            var title = document.createElement("h2");
+            var list = document.createElement("dl");
+            var link = document.createElement("a");
 
-              label.className = "type";
-              label.textContent = "类型 " + String(number).padStart(2, "0");
-              title.textContent = code;
-              [
-                ["美食占比", foodRatio], ["美食数量", foodCount],
-                ["旅游占比", travelRatio], ["旅游数量", travelCount]
-              ].forEach(function (item) {
-                var term = document.createElement("dt");
-                var detail = document.createElement("dd");
-                term.textContent = item[0];
-                detail.textContent = item[1] ? "显示" : "不显示";
-                list.append(term, detail);
-              });
-              link.className = "open";
-              link.href = "index.html?review=" + code;
-              link.target = "_blank";
-              link.rel = "noopener";
-              link.textContent = "打开验证 →";
-              article.append(label, title, list, link);
-              grid.appendChild(article);
+            tag.className = "type";
+            tag.textContent = "类型 " + String(number).padStart(2, "0");
+            title.textContent = code;
+            [
+              ["情境", topic.label],
+              ["负面评论占比展示", ratio.label],
+              ["AI 标记", label.label]
+            ].forEach(function (item) {
+              var term = document.createElement("dt");
+              var detail = document.createElement("dd");
+              term.textContent = item[0];
+              detail.textContent = item[1];
+              list.append(term, detail);
             });
+            link.className = "open";
+            link.href = "index.html?review=" + code;
+            link.target = "_blank";
+            link.rel = "noopener";
+            link.textContent = "打开验证 →";
+            article.append(tag, title, list, link);
+            grid.appendChild(article);
           });
         });
       });

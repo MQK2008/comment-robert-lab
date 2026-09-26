@@ -29,19 +29,10 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    button { font: inherit; }
-
     .page {
       width: min(100%, 640px);
       margin: 0 auto;
       padding: 28px 18px 64px;
-    }
-
-    .scene-progress {
-      margin: 0 0 10px 2px;
-      color: var(--ink-soft);
-      font-size: 12px;
-      letter-spacing: .04em;
     }
 
     .wb-shell {
@@ -139,26 +130,12 @@
 
     .wb-ai-bar {
       height: 6px;
-      margin-bottom: 8px;
       overflow: hidden;
       border-radius: 4px;
       background: #ffe3c7;
     }
 
-    .wb-ai-bar-fill { width: 32%; height: 100%; border-radius: 4px; background: var(--danger); }
-    .wb-ai-count { margin-bottom: 9px; color: #5b5b5b; font-size: 12.5px; line-height: 1.6; }
-    .wb-ai-count b { color: var(--danger); font-weight: 700; }
-    .wb-ai-examples-label { margin-bottom: 5px; color: #a8895f; font-size: 11.5px; font-weight: 600; }
-
-    .wb-ai-quote {
-      padding: 5px 0;
-      border-top: 1px dashed #ffe3c7;
-      color: #3d3d3d;
-      font-size: 12.5px;
-      line-height: 1.6;
-    }
-
-    .wb-ai-quote:first-child { border-top: 0; }
+    .wb-ai-bar-fill { width: 0%; height: 100%; border-radius: 4px; background: var(--danger); transition: width .12s linear; }
 
     .wb-engage {
       display: flex;
@@ -211,27 +188,6 @@
 
     .wb-viewall { padding: 11px 0 13px; color: #999; font-size: 12.5px; text-align: center; }
 
-    .flow-actions { display: flex; justify-content: flex-end; margin-top: 18px; }
-
-    .continue-btn {
-      min-width: 112px;
-      min-height: 44px;
-      padding: 10px 22px;
-      border: 0;
-      border-radius: 10px;
-      background: #23262b;
-      color: #fff;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 600;
-      transition: transform .15s ease, background-color .15s ease;
-    }
-
-    .continue-btn:hover { background: #3b3f46; }
-    .continue-btn:active { transform: scale(.98); }
-    .continue-btn:focus-visible { outline: 3px solid #f2a77f; outline-offset: 3px; }
-
-    .end-card,
     .error-card {
       padding: 48px 24px;
       border: 1px solid var(--panel-border);
@@ -241,9 +197,7 @@
       text-align: center;
     }
 
-    .end-card h1,
     .error-card h1 { margin: 0 0 10px; color: #181818; font-size: 22px; }
-    .end-card p,
     .error-card p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.7; }
     .is-hidden { display: none !important; }
 
@@ -265,7 +219,6 @@
       .wb-ai-head { align-items: flex-start; flex-wrap: wrap; }
       .wb-ai-sub { width: calc(100% - 29px); margin-left: 27px; margin-top: -5px; }
       .wb-engage { justify-content: space-between; gap: 8px; }
-      .continue-btn { width: 100%; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -278,7 +231,6 @@
     <div class="loading" id="loading" aria-label="页面加载中"></div>
 
     <section id="experiment" class="is-hidden" aria-live="polite">
-      <p class="scene-progress" id="sceneProgress"></p>
       <div class="wb-shell">
         <article class="wb-card" id="wbCard">
           <div class="wb-head">
@@ -305,14 +257,11 @@
 
             <div id="ratioBlock">
               <div class="wb-ai-pct-row">
-                <span class="wb-ai-pct-num">32%</span>
+                <span class="wb-ai-pct-num" id="pctNum">32%</span>
                 <span class="wb-ai-pct-label">评论疑似涉及在线骚扰</span>
               </div>
-              <div class="wb-ai-bar"><div class="wb-ai-bar-fill"></div></div>
+              <div class="wb-ai-bar"><div class="wb-ai-bar-fill" id="pctBar"></div></div>
             </div>
-
-            <div class="wb-ai-count" id="countIntro"></div>
-            <div id="aiExamples"></div>
           </section>
 
           <div class="wb-engage">
@@ -326,15 +275,6 @@
           <div class="wb-viewall">查看全部 126 条评论 ›</div>
         </article>
       </div>
-
-      <div class="flow-actions">
-        <button class="continue-btn" id="continueBtn" type="button">继续 →</button>
-      </div>
-    </section>
-
-    <section class="end-card is-hidden" id="endCard" aria-live="polite">
-      <h1>感谢您的配合</h1>
-      <p>您已完成全部场景，请返回问卷继续作答。</p>
     </section>
 
     <section class="error-card is-hidden" id="errorCard" role="alert">
@@ -349,9 +289,7 @@
     (function () {
       "use strict";
 
-      var STORAGE_KEY = "commentRobertExperimentV2";
-      var TOTAL_COMMENTS = 126;
-      var NEGATIVE_COUNT = 40;
+      var STORAGE_KEY = "commentRobertExperimentV3";
 
       var TOPICS = {
         food: {
@@ -415,45 +353,45 @@
       var COMMENT_NAMES = ["青禾不迟", "阿樱不迷路", "橙子不吃苹果", "半岛铁盒", "小满未满", "拿铁不加糖", "云边小卖部", "阿May", "北岸暮色", "一饱十年", "陈皮拿铁", "旧巷猫", "阿虎爱睡觉"];
       var COMMENT_COLORS = ["#ffb35e", "#8bd3c7", "#f4a6a0", "#a0c4ff", "#c9b1ff", "#ffd97d", "#9ad0c2", "#f7b7a3"];
       var VISIBLE_PATTERN = ["p", "p", "n", "p", "p", "n", "p", "p", "n", "p", "p", "n", "p"];
+      var RATIO_MODES = ["none", "static", "dynamic"];
+      var RATIO_BASE = 32;
 
       function el(id) { return document.getElementById(id); }
 
       function makeGroup() {
-        return { ratioShown: Math.random() < 0.5, countShown: Math.random() < 0.5 };
-      }
-
-      function makeSession() {
         return {
-          version: 2,
-          foodGroup: makeGroup(),
-          travelGroup: makeGroup(),
-          sceneOrder: Math.random() < 0.5 ? ["food", "travel"] : ["travel", "food"],
-          currentSceneIndex: 0
+          topic: Math.random() < 0.5 ? "food" : "travel",
+          ratioMode: RATIO_MODES[Math.floor(Math.random() * RATIO_MODES.length)],
+          aiLabelShown: Math.random() < 0.5
         };
       }
 
+      function makeSession() {
+        return { version: 3, group: makeGroup() };
+      }
+
       function makeReviewSession(code) {
-        var match = /^F([01])([01])T([01])([01])$/.exec(code || "");
+        var match = /^(F|T)(N|S|D)([01])$/.exec(code || "");
         if (!match) return null;
         return {
-          version: 2,
-          foodGroup: { ratioShown: match[1] === "1", countShown: match[2] === "1" },
-          travelGroup: { ratioShown: match[3] === "1", countShown: match[4] === "1" },
-          sceneOrder: ["food", "travel"],
-          currentSceneIndex: 0,
+          version: 3,
+          group: {
+            topic: match[1] === "F" ? "food" : "travel",
+            ratioMode: match[2] === "N" ? "none" : (match[2] === "S" ? "static" : "dynamic"),
+            aiLabelShown: match[3] === "1"
+          },
           reviewMode: true
         };
       }
 
       function isValidGroup(group) {
-        return group && typeof group.ratioShown === "boolean" && typeof group.countShown === "boolean";
+        return group && (group.topic === "food" || group.topic === "travel") &&
+          RATIO_MODES.indexOf(group.ratioMode) !== -1 &&
+          typeof group.aiLabelShown === "boolean";
       }
 
       function isValidSession(value) {
-        return value && value.version === 2 && isValidGroup(value.foodGroup) && isValidGroup(value.travelGroup) &&
-          Array.isArray(value.sceneOrder) && value.sceneOrder.length === 2 &&
-          value.sceneOrder.indexOf("food") !== -1 && value.sceneOrder.indexOf("travel") !== -1 &&
-          Number.isInteger(value.currentSceneIndex) && value.currentSceneIndex >= 0 && value.currentSceneIndex <= 2;
+        return value && value.version === 3 && isValidGroup(value.group);
       }
 
       function loadSession() {
@@ -471,10 +409,6 @@
         return created;
       }
 
-      function saveSession(session) {
-        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
-      }
-
       function buildComments(topic) {
         var positiveIndex = 0;
         var negativeIndex = 0;
@@ -484,22 +418,11 @@
         });
       }
 
-      function renderExamples(topic) {
-        var wrap = el("aiExamples");
-        wrap.replaceChildren();
-        topic.negatives.slice(0, 3).forEach(function (quote) {
-          var row = document.createElement("div");
-          row.className = "wb-ai-quote";
-          row.textContent = "“" + quote + "”";
-          wrap.appendChild(row);
-        });
-      }
-
-      function renderComments(topic, countShown) {
+      function renderComments(topic, aiLabelShown) {
         var wrap = el("wbComments");
         wrap.replaceChildren();
         buildComments(topic).forEach(function (comment, index) {
-          var flagged = comment.negative && countShown;
+          var flagged = comment.negative && aiLabelShown;
           var row = document.createElement("div");
           var avatar = document.createElement("div");
           var body = document.createElement("div");
@@ -534,12 +457,47 @@
         });
       }
 
-      function renderScene(session) {
-        var sceneName = session.sceneOrder[session.currentSceneIndex];
-        var topic = TOPICS[sceneName];
-        var group = session[sceneName + "Group"];
+      var ratioTimer = null;
 
-        el("sceneProgress").textContent = "场景 " + (session.currentSceneIndex + 1) + " / 2";
+      function renderRatio(ratioMode) {
+        if (ratioTimer) { clearInterval(ratioTimer); ratioTimer = null; }
+        var block = el("ratioBlock");
+        var numEl = el("pctNum");
+        var barEl = el("pctBar");
+
+        if (ratioMode === "none") {
+          block.classList.add("is-hidden");
+          return;
+        }
+        block.classList.remove("is-hidden");
+
+        if (ratioMode === "static") {
+          numEl.textContent = RATIO_BASE + "%";
+          barEl.style.width = RATIO_BASE + "%";
+          return;
+        }
+
+        var ticks = 16;
+        var i = 0;
+        ratioTimer = setInterval(function () {
+          i += 1;
+          if (i >= ticks) {
+            clearInterval(ratioTimer);
+            ratioTimer = null;
+            numEl.textContent = RATIO_BASE + "%";
+            barEl.style.width = RATIO_BASE + "%";
+            return;
+          }
+          var jitter = Math.round((Math.random() - 0.5) * 16);
+          var val = Math.min(96, Math.max(4, RATIO_BASE + jitter));
+          numEl.textContent = val + "%";
+          barEl.style.width = val + "%";
+        }, 150);
+      }
+
+      function renderScene(session) {
+        var topic = TOPICS[session.group.topic];
+
         el("wbAvatar").textContent = topic.avatarInit;
         el("wbAvatar").style.setProperty("--wb-a1", topic.colors[0]);
         el("wbAvatar").style.setProperty("--wb-a2", topic.colors[1]);
@@ -552,39 +510,17 @@
         el("engRepost").textContent = topic.engage.repost;
         el("engLike").textContent = topic.engage.like;
 
-        el("ratioBlock").classList.toggle("is-hidden", !group.ratioShown);
-        el("countIntro").innerHTML = group.countShown
-          ? "<b>" + NEGATIVE_COUNT + "</b> 条评论涉嫌在线骚扰（共 <b>" + TOTAL_COMMENTS + "</b> 条评论），AI 提取的原始评论示例如下："
-          : "AI 提取的原始评论示例如下：";
+        renderRatio(session.group.ratioMode);
+        renderComments(topic, session.group.aiLabelShown);
 
-        renderExamples(topic);
-        renderComments(topic, group.countShown);
         el("loading").classList.add("is-hidden");
-        el("endCard").classList.add("is-hidden");
         el("experiment").classList.remove("is-hidden");
-      }
-
-      function renderEnd() {
-        el("loading").classList.add("is-hidden");
-        el("experiment").classList.add("is-hidden");
-        el("endCard").classList.remove("is-hidden");
       }
 
       try {
         var reviewCode = new URLSearchParams(window.location.search).get("review");
         var session = makeReviewSession(reviewCode) || loadSession();
-        if (session.currentSceneIndex >= 2) renderEnd();
-        else renderScene(session);
-
-        el("continueBtn").addEventListener("click", function () {
-          session.currentSceneIndex += 1;
-          if (!session.reviewMode) saveSession(session);
-          if (session.currentSceneIndex >= 2) renderEnd();
-          else {
-            renderScene(session);
-            window.scrollTo({ top: 0, behavior: "smooth" });
-          }
-        });
+        renderScene(session);
       } catch (error) {
         el("loading").classList.add("is-hidden");
         el("experiment").classList.add("is-hidden");
